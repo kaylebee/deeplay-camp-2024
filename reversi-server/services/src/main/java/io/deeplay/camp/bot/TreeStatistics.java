@@ -22,7 +22,7 @@ public class TreeStatistics {
         logger.info("Terminal Nodes: " + terminalNodes);
         logger.info("Max Depth: " + maxDepth);
         logger.info("Branching Factor: " + branchingFactor);
-        logger.info("Time Taken (ms): " + duration);
+        logger.info("Time Taken (ms): " + duration + "\n\n");
     }
 
     private int countNodes(GameStateNode node) {

@@ -12,7 +12,7 @@ public class BoardTest {
         originalBoard.setPiece(3, 3, 1);
         originalBoard.setPiece(4, 4, 2);
 
-        KaylebeeBot bot = new KaylebeeBot(1, "Kaylebee");
+        KaylebeeBot bot = new KaylebeeBot(1, "Kaylebee", 4);
         BoardService copiedBoard = bot.getBoardCopy(originalBoard);
 
         String originalBoardState = originalBoard.getBoardStateDTOWithoutValidMoves();

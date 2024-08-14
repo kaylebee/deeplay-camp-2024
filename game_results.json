@@ -238,4 +238,19 @@
   "firstBotWins" : 4786,
   "secondBotWins" : 4717,
   "draws" : 497
+}, {
+  "totalGames" : 10000,
+  "firstBotWins" : 4760,
+  "secondBotWins" : 4754,
+  "draws" : 486
+}, {
+  "totalGames" : 1000,
+  "firstBotWins" : 652,
+  "secondBotWins" : 318,
+  "draws" : 30
+}, {
+  "totalGames" : 1000,
+  "firstBotWins" : 626,
+  "secondBotWins" : 347,
+  "draws" : 27
 } ]
