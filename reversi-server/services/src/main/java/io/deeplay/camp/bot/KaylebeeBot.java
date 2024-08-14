@@ -5,28 +5,32 @@ import io.deeplay.camp.board.BoardService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class KaylebeeBot extends BotStrategy {
     private final UtilityFunction utilityFunction;
     private final int maxDepth;
+    private final Map<Long, Double> transpositionTable;
 
     public KaylebeeBot(int id, String name, int maxDepth) {
         super(id, name);
         this.utilityFunction = new AdvancedUtilityFunction();
         this.maxDepth = maxDepth;
+        this.transpositionTable = new ConcurrentHashMap<>();
     }
 
     @Override
     public Tile getMakeMove(int currentPlayerId, @NotNull BoardService boardLogic) {
         BoardService boardCopy = getBoardCopy(boardLogic);
-        return iterativeDeepening(boardCopy, currentPlayerId, maxDepth);
+        return depthDeepening(boardCopy, currentPlayerId, maxDepth);
     }
 
-    private Tile iterativeDeepening(BoardService board, int currentPlayerId, int depth) {
+    private Tile depthDeepening(BoardService board, int currentPlayerId, int depth) {
         TreeBuilder treeBuilder = new TreeBuilder();
         GameStateNode root = treeBuilder.buildGameTree(board, currentPlayerId, depth);
-//        TreeStatistics treeStatistics = new TreeStatistics();
-//        treeStatistics.collectStatistics(root);
+        TreeStatistics treeStatistics = new TreeStatistics();
+        treeStatistics.collectStatistics(root);
 
         double bestValue = Double.NEGATIVE_INFINITY;
         Tile bestMove = null;
@@ -43,10 +47,16 @@ public class KaylebeeBot extends BotStrategy {
     }
 
     private double minimax(GameStateNode node, int depth, boolean maximizingPlayer, int currentPlayerId, double alpha, double beta) {
+        long boardHash = node.getBoard().hashCode();
+        if (transpositionTable.containsKey(boardHash)) {
+            return transpositionTable.get(boardHash);
+        }
+
         if (depth == 0 || node.getChildren().isEmpty()) {
             GameStateNode parent = node.getParent();
             BoardService boardBefore = (parent != null) ? parent.getBoard() : node.getBoard();
             double evaluation = utilityFunction.evaluate(boardBefore, node.getBoard(), currentPlayerId);
+            transpositionTable.put(boardHash, evaluation);
             return evaluation;
         }
 
@@ -61,6 +71,7 @@ public class KaylebeeBot extends BotStrategy {
                 }
             }
 
+            transpositionTable.put(boardHash, maxEval);
             return maxEval;
         } else {
             double minEval = Double.POSITIVE_INFINITY;
@@ -73,6 +84,7 @@ public class KaylebeeBot extends BotStrategy {
                 }
             }
 
+            transpositionTable.put(boardHash, minEval);
             return minEval;
         }
     }
