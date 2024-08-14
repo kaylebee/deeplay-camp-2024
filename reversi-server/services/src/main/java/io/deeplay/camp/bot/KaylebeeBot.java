@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class KaylebeeBot extends BotStrategy {
-    protected KaylebeeBot(int id, String name) {
+    public KaylebeeBot(int id, String name) {
         super(id, name);
     }
 
@@ -19,5 +19,9 @@ public class KaylebeeBot extends BotStrategy {
     @Override
     List<Tile> getAllValidMoves(int currentPlayerId, @NotNull BoardService boardLogic) {
         return boardLogic.getAllValidTiles(currentPlayerId);
+    }
+
+    public BoardService getBoardCopy(BoardService boardService) {
+        return boardService.getCopy();
     }
 }

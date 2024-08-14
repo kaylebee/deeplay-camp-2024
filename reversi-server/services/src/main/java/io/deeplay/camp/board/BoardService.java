@@ -21,6 +21,18 @@ public class BoardService {
         this.whiteChips = board.getWhiteChips();
     }
 
+    public BoardService(BoardService original) {
+        this.board = new Board(original.board);
+        this.blackChips = original.blackChips;
+        this.whiteChips = original.whiteChips;
+        this.blackValidMoves = original.blackValidMoves;
+        this.whiteValidMoves = original.whiteValidMoves;
+    }
+
+    public BoardService getCopy() {
+        return new BoardService(this);
+    }
+
     //!! Установка фишки на доску
     public void setPiece(int x, int y, int player) {
         long piece = 1L << (x + 8 * y);
@@ -373,14 +385,21 @@ public class BoardService {
         return "Board{" + state + '}';
     }
 
-    public long getBlackValidMoves() {
-        createValidMoves();
-        return blackValidMoves;
-    }
+    public String getBoardStateDTOWithoutValidMoves(){
+        StringBuilder state = new StringBuilder("");
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                if (hasPiece(x, y)) {
+                    if ((blackChips & (1L << (x + 8 * y))) != 0) {
+                        state.append("X ");
+                    } else {
+                        state.append("0 ");
+                    }
+                }
+            }
+        }
 
-    public long getWhiteValidMoves() {
-        createValidMoves();
-        return whiteValidMoves;
+        return "Board{" + state + '}';
     }
 
     public List<Tile> getAllValidTiles(int playerId) {
