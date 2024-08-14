@@ -44,7 +44,9 @@ public class KaylebeeBot extends BotStrategy {
 
     private double minimax(GameStateNode node, int depth, boolean maximizingPlayer, int currentPlayerId) {
         if (depth == 0 || node.getChildren().isEmpty()) {
-            double evaluation = utilityFunction.evaluate(node.getBoard(), currentPlayerId);
+            GameStateNode parent = node.getParent();
+            BoardService boardBefore = (parent != null) ? parent.getBoard() : node.getBoard();
+            double evaluation = utilityFunction.evaluate(boardBefore, node.getBoard(), currentPlayerId);
             return evaluation;
         }
 

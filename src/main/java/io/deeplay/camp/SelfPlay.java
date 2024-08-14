@@ -3,6 +3,7 @@ package io.deeplay.camp;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.deeplay.camp.bot.KaylebeeBot;
 import io.deeplay.camp.entity.Board;
 import io.deeplay.camp.entity.Tile;
 import io.deeplay.camp.board.BoardService;
@@ -92,7 +93,7 @@ public class SelfPlay {
      * @return null
      */
     private Void playSingleGame(boolean firstBotStarts) {
-        BotStrategy firstRandomBot = new RandomBot(1, "DarlingBot");
+        BotStrategy firstRandomBot = new KaylebeeBot(1, "DarlingBot", 4);
         BotStrategy secondRandomBot = new RandomBot(2, "ViolaBot");
         Board board = new Board();
         BoardService boardLogic = new BoardService(board);

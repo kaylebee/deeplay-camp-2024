@@ -29,6 +29,16 @@ public class BoardService {
         this.whiteValidMoves = original.whiteValidMoves;
     }
 
+    public boolean hasPieceBlack(int x, int y) {
+        long mask = 1L << (x + 8 * y);
+        return ((blackChips & mask) != 0);
+    }
+
+    public boolean hasPieceWhite(int x, int y) {
+        long mask = 1L << (x + 8 * y);
+        return ((whiteChips & mask) != 0);
+    }
+
     public BoardService getCopy() {
         return new BoardService(this);
     }
