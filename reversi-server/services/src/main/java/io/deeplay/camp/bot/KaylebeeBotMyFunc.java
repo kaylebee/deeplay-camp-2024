@@ -6,11 +6,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class KaylebeeBot extends BotStrategy {
+public class KaylebeeBotMyFunc extends BotStrategy {
     private final UtilityFunction utilityFunction;
     private final int maxDepth;
 
-    public KaylebeeBot(int id, String name, int maxDepth) {
+    public KaylebeeBotMyFunc(int id, String name, int maxDepth) {
         super(id, name);
         this.utilityFunction = new AdvancedUtilityFunction();
         this.maxDepth = maxDepth;
@@ -25,8 +25,8 @@ public class KaylebeeBot extends BotStrategy {
     private Tile depthDeepening(BoardService board, int currentPlayerId, int depth) {
         TreeBuilder treeBuilder = new TreeBuilder();
         GameStateNode root = treeBuilder.buildGameTree(board, currentPlayerId, depth);
-        TreeStatistics treeStatistics = new TreeStatistics();
-        treeStatistics.collectStatistics(root);
+//        TreeStatistics treeStatistics = new TreeStatistics();
+//        treeStatistics.collectStatistics(root);
 
         double bestValue = Double.NEGATIVE_INFINITY;
         Tile bestMove = null;
@@ -46,7 +46,7 @@ public class KaylebeeBot extends BotStrategy {
         if (depth == 0 || node.getChildren().isEmpty()) {
             GameStateNode parent = node.getParent();
             BoardService boardBefore = (parent != null) ? parent.getBoard() : node.getBoard();
-            double evaluation = utilityFunction.evaluate(boardBefore, node.getBoard(), currentPlayerId);
+            double evaluation = utilityFunction.evaluate(node, boardBefore, node.getBoard(), currentPlayerId);
             return evaluation;
         }
 

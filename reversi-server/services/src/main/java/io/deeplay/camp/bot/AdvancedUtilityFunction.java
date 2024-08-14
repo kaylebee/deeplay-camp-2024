@@ -7,18 +7,18 @@ import java.util.List;
 
 public class AdvancedUtilityFunction implements UtilityFunction {
     private static final int[][] WEIGHTS = {
-            {100, -10, 10, 10, 10, 10, -10, 100},
+            {200, -10, 30, 30, 30, 30, -10, 200},
             {-10, -20, 1, 1, 1, 1, -20, -10},
-            {10, 1, 5, 5, 5, 5, 1, 10},
-            {10, 1, 5, 5, 5, 5, 1, 10},
-            {10, 1, 5, 5, 5, 5, 1, 10},
-            {10, 1, 5, 5, 5, 5, 1, 10},
+            {30, 1, 5, 5, 5, 5, 1, 30},
+            {30, 1, 5, 5, 5, 5, 1, 30},
+            {30, 1, 5, 5, 5, 5, 1, 30},
+            {30, 1, 5, 5, 5, 5, 1, 30},
             {-10, -20, 1, 1, 1, 1, -20, -10},
-            {100, -10, 10, 10, 10, 10, -10, 100}
+            {200, -10, 30, 30, 30, 30, -10, 200}
     };
 
     @Override
-    public double evaluate(BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
+    public double evaluate(GameStateNode node, BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
         int opponentId = (currentPlayerId == 1) ? 2 : 1;
 
         int currentPlayerScore = 0;
@@ -53,8 +53,9 @@ public class AdvancedUtilityFunction implements UtilityFunction {
 
         return currentPlayerScore - opponentScore
                 + 10 * pieceDifference
-                + 5 * mobilityDifference
-                + 2 * flipScore;
+                + 20 * mobilityDifference
+//                + (int)((double)flipScore/5)
+                ;
     }
 
     private int calculateMobility(BoardService board, int currentPlayerId) {
@@ -68,9 +69,9 @@ public class AdvancedUtilityFunction implements UtilityFunction {
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 if (boardAfter.hasPieceBlack(x, y) && !boardBefore.hasPieceBlack(x, y)) {
-                    flippedPieces++;
+                    flippedPieces += WEIGHTS[x][y];
                 } else if (boardAfter.hasPieceWhite(x, y) && !boardBefore.hasPieceWhite(x, y)) {
-                    flippedPieces++;
+                    flippedPieces += WEIGHTS[x][y];
                 }
             }
         }

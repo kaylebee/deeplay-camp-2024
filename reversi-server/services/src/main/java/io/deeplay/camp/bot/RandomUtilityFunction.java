@@ -12,7 +12,7 @@ public class RandomUtilityFunction implements UtilityFunction {
     }
 
     @Override
-    public double evaluate(BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
+    public double evaluate(GameStateNode node, BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
         return -1 + 2 * random.nextDouble();
     }
 }
