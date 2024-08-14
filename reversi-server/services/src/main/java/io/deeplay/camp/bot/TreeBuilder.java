@@ -7,13 +7,17 @@ import java.util.List;
 
 public class TreeBuilder {
 
-    public GameStateNode buildGameTree(BoardService initialBoard, int currentPlayer) {
+    public GameStateNode buildGameTree(BoardService initialBoard, int currentPlayer, int maxDepth) {
         GameStateNode root = new GameStateNode(initialBoard, null, currentPlayer, null);
-        buildGameTree(root, currentPlayer);
+        buildGameTree(root, currentPlayer, maxDepth, 0);
         return root;
     }
 
-    private void buildGameTree(GameStateNode node, int currentPlayer) {
+    private void buildGameTree(GameStateNode node, int currentPlayer, int maxDepth, int currentDepth) {
+        if (currentDepth >= maxDepth) {
+            return;
+        }
+
         BoardService board = node.getBoard();
         List<Tile> validMoves = getAllValidMoves(currentPlayer, board);
 
@@ -27,7 +31,7 @@ public class TreeBuilder {
             int nextPlayer = (currentPlayer == 1) ? 2 : 1;
             GameStateNode childNode = new GameStateNode(newBoard, move, nextPlayer, node);
             node.addChild(childNode);
-            buildGameTree(childNode, nextPlayer);
+            buildGameTree(childNode, nextPlayer, maxDepth, currentDepth + 1);
         }
     }
 
