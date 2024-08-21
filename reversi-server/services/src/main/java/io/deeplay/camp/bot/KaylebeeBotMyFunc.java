@@ -18,63 +18,74 @@ public class KaylebeeBotMyFunc extends BotStrategy {
 
     @Override
     public Tile getMakeMove(int currentPlayerId, @NotNull BoardService boardLogic) {
-        BoardService boardCopy = getBoardCopy(boardLogic);
-        return depthDeepening(boardCopy, currentPlayerId, maxDepth);
+        Tile bestMove = depthDeepening(boardLogic, currentPlayerId, maxDepth);
+        return bestMove;
     }
 
     private Tile depthDeepening(BoardService board, int currentPlayerId, int depth) {
-        TreeBuilder treeBuilder = new TreeBuilder();
-        GameStateNode root = treeBuilder.buildGameTree(board, currentPlayerId, depth);
-//        TreeStatistics treeStatistics = new TreeStatistics();
-//        treeStatistics.collectStatistics(root);
-
         double bestValue = Double.NEGATIVE_INFINITY;
         Tile bestMove = null;
 
-        for (GameStateNode child : root.getChildren()) {
-            double nodeValue = minimax(child, depth - 1, false, currentPlayerId, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+        List<Tile> possibleMoves = board.getAllValidTiles(currentPlayerId);
+
+        for (Tile move : possibleMoves) {
+            BoardService boardCopy = board.getCopy();
+            boardCopy.makeMove(currentPlayerId, move);
+            double nodeValue = minimax(boardCopy, depth - 1, false, currentPlayerId, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+
             if (nodeValue > bestValue) {
                 bestValue = nodeValue;
-                bestMove = child.getMove();
+                bestMove = move;
             }
         }
 
         return bestMove;
     }
 
-    private double minimax(GameStateNode node, int depth, boolean maximizingPlayer, int currentPlayerId, double alpha, double beta) {
-        if (depth == 0 || node.getChildren().isEmpty()) {
-            GameStateNode parent = node.getParent();
-            BoardService boardBefore = (parent != null) ? parent.getBoard() : node.getBoard();
-            double evaluation = utilityFunction.evaluate(node, boardBefore, node.getBoard(), currentPlayerId);
+    private double minimax(BoardService board, int depth, boolean maximizingPlayer, int currentPlayerId, double alpha, double beta) {
+        if (depth == 0 || board.checkForWin().isGameFinished()) {
+            double evaluation = utilityFunction.evaluate(board, currentPlayerId);
             return evaluation;
         }
 
+        int nextPlayerId = getNextPlayer(currentPlayerId);
+
         if (maximizingPlayer) {
             double maxEval = Double.NEGATIVE_INFINITY;
-            for (GameStateNode child : node.getChildren()) {
-                double eval = minimax(child, depth - 1, false, currentPlayerId, alpha, beta);
+            if (board.getAllValidTiles(currentPlayerId).isEmpty()) {
+                return 0;
+            }
+            for (Tile move : board.getAllValidTiles(currentPlayerId)) {
+                BoardService boardCopy = board.getCopy();
+                boardCopy.makeMove(currentPlayerId, move);
+                double eval = minimax(boardCopy, depth - 1, false, currentPlayerId, alpha, beta);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
+
                 if (beta <= alpha) {
                     break;
                 }
             }
-
             return maxEval;
         } else {
             double minEval = Double.POSITIVE_INFINITY;
-            for (GameStateNode child : node.getChildren()) {
-                double eval = minimax(child, depth - 1, true, currentPlayerId, alpha, beta);
+            for (Tile move : board.getAllValidTiles(nextPlayerId)) {
+                BoardService boardCopy = board.getCopy();
+                boardCopy.makeMove(nextPlayerId, move);
+                double eval = minimax(boardCopy, depth - 1, true, currentPlayerId, alpha, beta);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
+
                 if (beta <= alpha) {
                     break;
                 }
             }
-
             return minEval;
         }
+    }
+
+    private int getNextPlayer(int currentPlayerId) {
+        return currentPlayerId == 1 ? 2 : 1;
     }
 
     @Override
