@@ -53,7 +53,7 @@ public class KaylebeeBotMyFunc extends BotStrategy {
         if (maximizingPlayer) {
             double maxEval = Double.NEGATIVE_INFINITY;
             if (board.getAllValidTiles(currentPlayerId).isEmpty()) {
-                return 0;
+                return -1.0;
             }
             for (Tile move : board.getAllValidTiles(currentPlayerId)) {
                 BoardService boardCopy = board.getCopy();
