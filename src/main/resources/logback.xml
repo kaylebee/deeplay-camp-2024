@@ -24,4 +24,10 @@
         <appender-ref ref="COLORED_STDOUT" />
     </root>
 
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="org.deeplearning4j" level="INFO" />
+
 </configuration>

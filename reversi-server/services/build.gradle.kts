@@ -11,6 +11,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.postgresql:postgresql:42.2.20")
+    implementation("org.nd4j:nd4j-native-platform:1.0.0-beta7")
+    implementation("org.deeplearning4j:deeplearning4j-core:1.0.0-beta7")
+    implementation("org.deeplearning4j:deeplearning4j-core:1.0.0-beta7")
+    implementation("org.nd4j:nd4j-native-platform:1.0.0-beta7")
+    implementation("com.microsoft.onnxruntime:onnxruntime:1.8.1")
+    implementation("org.slf4j:slf4j-api:1.7.30")
+    implementation("org.slf4j:slf4j-simple:1.7.30")
     implementation(project(":reversi-server:model"))
     implementation(project(":utilities"))
     implementation(project(":reversi-server:data-base"))

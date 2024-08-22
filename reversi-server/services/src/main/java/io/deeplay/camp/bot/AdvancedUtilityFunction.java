@@ -17,9 +17,21 @@ public class AdvancedUtilityFunction implements UtilityFunction {
             {200, -10, 30, 30, 30, 30, -10, 200}
     };
 
+    private static final int MAX_SCORE = 1000;
+
     @Override
-    public double evaluate(GameStateNode node, BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
+    public double evaluate(BoardService boardAfter, int currentPlayerId) {
         int opponentId = (currentPlayerId == 1) ? 2 : 1;
+
+        if (boardAfter.checkForWin().isGameFinished()) {
+            if (boardAfter.checkForWin().getUserIdWinner() == currentPlayerId) {
+                return 1.0;
+            } else if (boardAfter.checkForWin().getUserIdWinner() == opponentId) {
+                return -1.0;
+            } else if (boardAfter.checkForWin().getUserIdWinner() == 3) {
+                return 0.0;
+            }
+        }
 
         int currentPlayerScore = 0;
         int opponentScore = 0;
@@ -49,33 +61,15 @@ public class AdvancedUtilityFunction implements UtilityFunction {
         int opponentMobility = calculateMobility(boardAfter, opponentId);
         int mobilityDifference = currentPlayerMobility - opponentMobility;
 
-        int flipScore = countFlippedPieces(boardBefore, boardAfter);
-
-        return currentPlayerScore - opponentScore
+        double rawScore = currentPlayerScore - opponentScore
                 + 10 * pieceDifference
-                + 20 * mobilityDifference
-//                + (int)((double)flipScore/5)
-                ;
+                + 20 * mobilityDifference;
+
+        return Math.max(-1.0, Math.min(1.0, rawScore / MAX_SCORE));
     }
 
     private int calculateMobility(BoardService board, int currentPlayerId) {
         List<Tile> validMoves = board.getAllValidTiles(currentPlayerId);
         return validMoves.size();
-    }
-
-    private int countFlippedPieces(BoardService boardBefore, BoardService boardAfter) {
-        int flippedPieces = 0;
-
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                if (boardAfter.hasPieceBlack(x, y) && !boardBefore.hasPieceBlack(x, y)) {
-                    flippedPieces += WEIGHTS[x][y];
-                } else if (boardAfter.hasPieceWhite(x, y) && !boardBefore.hasPieceWhite(x, y)) {
-                    flippedPieces += WEIGHTS[x][y];
-                }
-            }
-        }
-
-        return flippedPieces;
     }
 }

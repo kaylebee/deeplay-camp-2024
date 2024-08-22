@@ -15,6 +15,8 @@ java {
 }
 
 dependencies {
+    implementation("org.postgresql:postgresql:42.2.20")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation(project(":reversi-server:controller"))

@@ -12,7 +12,16 @@ public class RandomUtilityFunction implements UtilityFunction {
     }
 
     @Override
-    public double evaluate(GameStateNode node, BoardService boardBefore, BoardService boardAfter, int currentPlayerId) {
+    public double evaluate(BoardService boardAfter, int currentPlayerId) {
+        if (boardAfter.checkForWin().isGameFinished()) {
+            if (boardAfter.checkForWin().getUserIdWinner() == 1) {
+                return 1;
+            } else if (boardAfter.checkForWin().getUserIdWinner() == 2) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
         return -1 + 2 * random.nextDouble();
     }
 }
