@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.deeplay.camp.bot.KaylebeeBotMyFunc;
+import io.deeplay.camp.bot.MCTSBot;
 import io.deeplay.camp.entity.Board;
 import io.deeplay.camp.entity.Tile;
 import io.deeplay.camp.board.BoardService;
@@ -54,6 +55,8 @@ public class SelfPlay {
      * </p>
      */
     public void startBotGame() {
+        long startTime = System.currentTimeMillis();
+
         int totalBatches = (int) Math.ceil((double) gameCount / 50);
 
         for (int batch = 0; batch < totalBatches; batch++) {
@@ -80,7 +83,10 @@ public class SelfPlay {
         gameExecutor.shutdown();
         scheduler.shutdown();
 
-        saveResultsToJson();
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
+
+        saveResultsToJson(duration);
     }
 
     /**
@@ -93,8 +99,8 @@ public class SelfPlay {
      * @return null
      */
     private Void playSingleGame(boolean firstBotStarts) {
-        BotStrategy firstRandomBot = new KaylebeeBotMyFunc(1, "DarlingBot", 3);
-        BotStrategy secondRandomBot = new RandomBot(2, "ViolaBot");
+        BotStrategy secondRandomBot = new KaylebeeBotMyFunc(1, "ViolaBot", 5);
+        BotStrategy firstRandomBot = new RandomBot(2, "DarlingBot");
         Board board = new Board();
         BoardService boardLogic = new BoardService(board);
         BotStrategy currentBot = firstBotStarts ? firstRandomBot : secondRandomBot;
@@ -130,7 +136,7 @@ public class SelfPlay {
         Future<Tile> futureMove = scheduler.schedule(botMoveTask, 0, TimeUnit.SECONDS);
 
         try {
-            var tile = futureMove.get(5, TimeUnit.SECONDS);
+            var tile = futureMove.get(5000, TimeUnit.SECONDS);
             if (tile != null) boardLogic.makeMove(botService.id, tile);
         } catch (TimeoutException e) {
             logger.error("Bot {} move timed out.", botService.id);
@@ -165,7 +171,7 @@ public class SelfPlay {
      * This method reads existing results from the file, adds the new results, and writes them back to the file.
      * </p>
      */
-    private void saveResultsToJson() {
+    private void saveResultsToJson(long duration) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
         File file = new File("game_results.json");
@@ -183,7 +189,7 @@ public class SelfPlay {
             resultsList = new ArrayList<>();
         }
 
-        Results newResults = new Results(gameCount, firstBotWins.get(), secondBotWins.get(), draws.get());
+        Results newResults = new Results(gameCount, firstBotWins.get(), secondBotWins.get(), draws.get(), duration);
         resultsList.add(newResults);
 
         try {
@@ -205,14 +211,16 @@ public class SelfPlay {
         public int firstBotWins;
         public int secondBotWins;
         public int draws;
+        public long duration; // Новое поле для времени выполнения
 
         public Results() {}
 
-        public Results(int totalGames, int firstBotWins, int secondBotWins, int draws) {
+        public Results(int totalGames, int firstBotWins, int secondBotWins, int draws, long duration) {
             this.totalGames = totalGames;
             this.firstBotWins = firstBotWins;
             this.secondBotWins = secondBotWins;
             this.draws = draws;
+            this.duration = duration;
         }
 
         public int getTotalGames() {
@@ -245,6 +253,14 @@ public class SelfPlay {
 
         public void setDraws(int draws) {
             this.draws = draws;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public void setDuration(long duration) {
+            this.duration = duration;
         }
     }
 }
