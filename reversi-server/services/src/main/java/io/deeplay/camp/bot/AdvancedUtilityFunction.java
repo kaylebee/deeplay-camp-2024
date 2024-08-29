@@ -53,16 +53,16 @@ public class AdvancedUtilityFunction implements UtilityFunction {
             }
         }
 
-        int currentPlayerPieces = boardAfter.getAllValidTiles(currentPlayerId).size();
-        int opponentPieces = boardAfter.getAllValidTiles(opponentId).size();
-        int pieceDifference = currentPlayerPieces - opponentPieces;
+//        int currentPlayerPieces = boardAfter.getAllValidTiles(currentPlayerId).size();
+//        int opponentPieces = boardAfter.getAllValidTiles(opponentId).size();
+//        int pieceDifference = currentPlayerPieces - opponentPieces;
 
         int currentPlayerMobility = calculateMobility(boardAfter, currentPlayerId);
         int opponentMobility = calculateMobility(boardAfter, opponentId);
         int mobilityDifference = currentPlayerMobility - opponentMobility;
 
         double rawScore = currentPlayerScore - opponentScore
-                + 10 * pieceDifference
+//                + 10 * pieceDifference
                 + 20 * mobilityDifference;
 
         return Math.max(-1.0, Math.min(1.0, rawScore / MAX_SCORE));
