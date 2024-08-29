@@ -3,13 +3,10 @@ package io.deeplay.camp;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import io.deeplay.camp.bot.KaylebeeBotMyFunc;
-import io.deeplay.camp.bot.MCTSBot;
+import io.deeplay.camp.bot.*;
 import io.deeplay.camp.entity.Board;
 import io.deeplay.camp.entity.Tile;
 import io.deeplay.camp.board.BoardService;
-import io.deeplay.camp.bot.BotStrategy;
-import io.deeplay.camp.bot.RandomBot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,33 +36,26 @@ public class SelfPlay {
     private final AtomicInteger draws = new AtomicInteger(0);
     private final AtomicInteger totalGamesCompleted = new AtomicInteger(0);
 
-    /**
-     * Initializes a new SelfPlay instance with the specified number of games.
-     *
-     * @param gameCount The total number of games to be played.
-     */
     public SelfPlay(int gameCount) {
         this.gameCount = gameCount;
     }
 
-    /**
-     * Starts the self-play games between the bots.
-     * <p>
-     * This method divides the total games into batches, executes them, and logs the results after each batch.
-     * </p>
-     */
     public void startBotGame() {
+        String modelPath = "C:/Users/filiy/model_v2.zip";
+        DeepQLearningAgent agent = new DeepQLearningAgent();
+        agent.loadModel(modelPath);
+
         long startTime = System.currentTimeMillis();
 
-        int totalBatches = (int) Math.ceil((double) gameCount / 50);
+        int totalBatches = (int) Math.ceil((double) gameCount / 1);
 
         for (int batch = 0; batch < totalBatches; batch++) {
-            int gamesInBatch = Math.min(50, gameCount - batch * 50);
+            int gamesInBatch = Math.min(1, gameCount - batch * 1);
             List<Future<Void>> futures = new ArrayList<>();
 
             for (int i = 0; i < gamesInBatch; i++) {
-                int gameIndex = batch * 50 + i;
-                futures.add(gameExecutor.submit(() -> playSingleGame(gameIndex % 2 == 0)));
+                int gameIndex = batch * 1 + i;
+                futures.add(gameExecutor.submit(() -> playSingleGame(gameIndex % 2 == 0, agent)));
             }
 
             for (Future<Void> future : futures) {
@@ -87,19 +77,12 @@ public class SelfPlay {
         long duration = endTime - startTime;
 
         saveResultsToJson(duration);
+
+        agent.saveModel(modelPath);
     }
 
-    /**
-     * Plays a single game between the bots.
-     * <p>
-     * This method initializes the bots and the board, executes the game, and updates the win/draw counters.
-     * </p>
-     *
-     * @param firstBotStarts True if the first bot starts the game, false otherwise.
-     * @return null
-     */
-    private Void playSingleGame(boolean firstBotStarts) {
-        BotStrategy secondRandomBot = new KaylebeeBotMyFunc(1, "ViolaBot", 5);
+    private Void playSingleGame(boolean firstBotStarts, DeepQLearningAgent agent) {
+        BotStrategy secondRandomBot = new ModelTesting(1, "ViolaBot", agent);
         BotStrategy firstRandomBot = new RandomBot(2, "DarlingBot");
         Board board = new Board();
         BoardService boardLogic = new BoardService(board);
@@ -122,15 +105,6 @@ public class SelfPlay {
         return null;
     }
 
-    /**
-     * Executes a move for the given bot.
-     * <p>
-     * This method schedules the bot's move and updates the board with the move.
-     * </p>
-     *
-     * @param botService The bot making the move.
-     * @param boardLogic The board logic to be used for making the move.
-     */
     private void executeBotMove(BotStrategy botService, BoardService boardLogic) {
         Callable<Tile> botMoveTask = () -> botService.getMakeMove(botService.id, boardLogic);
         Future<Tile> futureMove = scheduler.schedule(botMoveTask, 0, TimeUnit.SECONDS);
@@ -148,14 +122,6 @@ public class SelfPlay {
         }
     }
 
-    /**
-     * Updates the game results when a bot loses.
-     * <p>
-     * This method increments the win counter for the other bot and the total games completed counter.
-     * </p>
-     *
-     * @param botNumberLose The ID of the bot that lost.
-     */
     private void gameFinished(int botNumberLose) {
         if (botNumberLose == 1) {
             secondBotWins.incrementAndGet();
@@ -165,12 +131,6 @@ public class SelfPlay {
         totalGamesCompleted.incrementAndGet();
     }
 
-    /**
-     * Saves the game results to a JSON file.
-     * <p>
-     * This method reads existing results from the file, adds the new results, and writes them back to the file.
-     * </p>
-     */
     private void saveResultsToJson(long duration) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
@@ -200,12 +160,6 @@ public class SelfPlay {
         }
     }
 
-    /**
-     * Represents the results of the self-play games.
-     * <p>
-     * This class holds the total number of games, the number of wins for each bot, and the number of draws.
-     * </p>
-     */
     private static class Results {
         public int totalGames;
         public int firstBotWins;
@@ -220,46 +174,6 @@ public class SelfPlay {
             this.firstBotWins = firstBotWins;
             this.secondBotWins = secondBotWins;
             this.draws = draws;
-            this.duration = duration;
-        }
-
-        public int getTotalGames() {
-            return totalGames;
-        }
-
-        public void setTotalGames(int totalGames) {
-            this.totalGames = totalGames;
-        }
-
-        public int getFirstBotWins() {
-            return firstBotWins;
-        }
-
-        public void setFirstBotWins(int firstBotWins) {
-            this.firstBotWins = firstBotWins;
-        }
-
-        public int getSecondBotWins() {
-            return secondBotWins;
-        }
-
-        public void setSecondBotWins(int secondBotWins) {
-            this.secondBotWins = secondBotWins;
-        }
-
-        public int getDraws() {
-            return draws;
-        }
-
-        public void setDraws(int draws) {
-            this.draws = draws;
-        }
-
-        public long getDuration() {
-            return duration;
-        }
-
-        public void setDuration(long duration) {
             this.duration = duration;
         }
     }
