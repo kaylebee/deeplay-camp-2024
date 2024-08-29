@@ -8,13 +8,33 @@ public class Experience {
     private final double reward;
     private final INDArray nextState;
     private final boolean done;
+    private double priority;
+    private double importanceWeight;
 
-    public Experience(INDArray state, int action, double reward, INDArray nextState, boolean done) {
+    public Experience(INDArray state, int action, double reward, INDArray nextState, boolean done, double priority) {
         this.state = state;
         this.action = action;
         this.reward = reward;
         this.nextState = nextState;
         this.done = done;
+        this.priority = priority;
+        this.importanceWeight = 1.0;
+    }
+
+    public double getImportanceWeight() {
+        return importanceWeight;
+    }
+
+    public void setImportanceWeight(double importanceWeight) {
+        this.importanceWeight = importanceWeight;
+    }
+
+    public double getPriority() {
+        return priority;
+    }
+
+    public void setPriority(double priority) {
+        this.priority = priority;
     }
 
     public INDArray getState() {

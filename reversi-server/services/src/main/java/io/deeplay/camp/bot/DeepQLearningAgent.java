@@ -9,6 +9,7 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
+import org.deeplearning4j.nn.conf.layers.DropoutLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
@@ -39,7 +40,7 @@ public class DeepQLearningAgent {
         this.gamma = 0.99;
         this.alpha = 0.01;
         this.random = new Random();
-        this.batchSize = 128;
+        this.batchSize = 64;
         this.replayBuffer = new ReplayBuffer(100000);
         this.experienceDatabase = new DataBase();
 
@@ -73,28 +74,33 @@ public class DeepQLearningAgent {
         int outputSize = 64;
 
         NeuralNetConfiguration.ListBuilder builder = new NeuralNetConfiguration.Builder()
-                .seed(7997) // Полностю случайный сид. Просто для одинаковой инициализации
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT) // Для обновления параметров.
-                // Общая логика, книжный вариант, может давать шумы, но они по идее нивелируются через Adam.
-                .updater(new Adam(alpha)) // Доработка общей оптимизации
-                // Досаточно мощный, работает через градиенты и их квадраты (поизменять alpha, желательно динамически.)
-                .weightInit(WeightInit.XAVIER) // задает начальные веса на основе количества входов и выходов для каждого узла.
+                .seed(7997)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(new Adam(alpha))
+                .weightInit(WeightInit.XAVIER)
                 .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue)
                 .gradientNormalizationThreshold(1.0)
                 .list();
 
-        builder.layer(new DenseLayer.Builder().nIn(inputSize).nOut(128) // Оптимально? Есть вариант повысить при большом
-                // колличестве параметров для обучения
-                .activation(Activation.RELU) // Новая функция активации. Позволяет избежать затухание грдиента.
+        builder.layer(new DenseLayer.Builder().nIn(inputSize).nOut(256)
+                .activation(Activation.RELU)
                 .build());
 
-        builder.layer(new DenseLayer.Builder().nIn(128).nOut(128)
+        builder.layer(new DenseLayer.Builder().nIn(256).nOut(256)
+                .activation(Activation.RELU)
+                .build());
+
+        builder.layer(new DenseLayer.Builder().nIn(256).nOut(128)
+                .activation(Activation.RELU)
+                .build());
+
+        builder.layer(new DenseLayer.Builder().nIn(128).nOut(64)
                 .activation(Activation.RELU)
                 .build());
 
         builder.layer(new OutputLayer.Builder(LossFunctions.LossFunction.L2)
-                .activation(Activation.TANH) // Линейная функция активации, ради получения точного значения.
-                .nIn(128).nOut(outputSize)
+                .activation(Activation.TANH)
+                .nIn(64).nOut(outputSize)
                 .build());
 
         model = new MultiLayerNetwork(builder.build());
@@ -126,7 +132,7 @@ public class DeepQLearningAgent {
     public void storeExperience(BoardService game, int[] action, double reward, BoardService nextGame, boolean done) {
         INDArray state = gameToINDArray(game);
         INDArray nextState = gameToINDArray(nextGame);
-        Experience experience = new Experience(state, action[0] * 8 + action[1], reward, nextState, done);
+        Experience experience = new Experience(state, action[0] * 8 + action[1], reward, nextState, done, 1.0);
         replayBuffer.add(experience);
         experienceDatabase.addExperience(experience);
     }
@@ -175,12 +181,12 @@ public class DeepQLearningAgent {
     }
 
     public void replay(int batchSize) {
-        int iterationCount = model.getIterationCount();
         experienceDatabase.calculateAndStoreWinRate();
-        double check = experienceDatabase.getLatestWinRate();
-        double winRate = check != -1.0 ? check : 0.0;
-//        System.out.println("winrate: " + winRate);
-        gamma = updateGamma(iterationCount, winRate);
+        double winRate = experienceDatabase.getLatestWinRate();
+        if (winRate == -1.0) {
+            winRate = 0.0;
+        }
+        gamma = updateGamma(model.getIterationCount(), winRate);
 
         List<Experience> experiences = replayBuffer.sample(batchSize);
         for (Experience experience : experiences) {
@@ -195,11 +201,19 @@ public class DeepQLearningAgent {
             if (!done) {
                 targetValue += gamma * model.output(nextState).max(1).getDouble(0);
             }
+
+            double tdError = Math.abs(targetValue - target.getDouble(action));
+
+            experience.setPriority(tdError);
+
+            replayBuffer.updatePriority(experience, tdError);
+
             target.putScalar(action, targetValue);
 
-//            System.out.println("gamma: " + gamma + " targetValue: " + targetValue);
+            double importanceWeight = experience.getImportanceWeight();
+            INDArray importanceWeightedTarget = target.mul(importanceWeight);
 
-            model.fit(new DataSet(state, target));
+            model.fit(new DataSet(state, importanceWeightedTarget));
         }
     }
 

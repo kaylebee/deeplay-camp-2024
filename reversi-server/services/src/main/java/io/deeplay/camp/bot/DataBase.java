@@ -14,7 +14,7 @@ public class DataBase {
     private static final String DB_URL = "jdbc:postgresql://localhost:5432/model";
     private static final String USER = "postgres";
     private static final String PASS = "admin";
-    private static final String TABLE_NAME = "experience_v_2";
+    private static final String TABLE_NAME = "experience_v_3";
     private static final String OpponentName = "random_bot";
 
     public DataBase() {
@@ -43,7 +43,7 @@ public class DataBase {
     }
 
     private void createWinRateTable(Connection conn) throws SQLException {
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS win_rate ("
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS win_rate_v3 ("
                 + "id SERIAL PRIMARY KEY,"
                 + "win_rate DOUBLE PRECISION,"
                 + "opponent_name VARCHAR(255)"
@@ -112,7 +112,7 @@ public class DataBase {
                 boolean done = rs.getBoolean("done");
 
                 if (state != null && nextState != null) {
-                    experiences.add(new Experience(state, action, reward, nextState, done));
+                    experiences.add(new Experience(state, action, reward, nextState, done, 1.0));
                 }
             }
         } catch (SQLException e) {
@@ -140,7 +140,7 @@ public class DataBase {
 
                 double winRate = (total > 0) ? (double) wins / total : 0;
 
-                String insertWinRateSQL = "INSERT INTO win_rate (win_rate, opponent_name) VALUES (?, ?);";
+                String insertWinRateSQL = "INSERT INTO win_rate_v3 (win_rate, opponent_name) VALUES (?, ?);";
                 try (PreparedStatement pstmt = conn.prepareStatement(insertWinRateSQL)) {
                     pstmt.setDouble(1, winRate);
                     pstmt.setString(2, OpponentName);
@@ -153,7 +153,7 @@ public class DataBase {
     }
 
     public double getLatestWinRate() {
-        String querySQL = "SELECT win_rate FROM win_rate ORDER BY id DESC LIMIT 1;";
+        String querySQL = "SELECT win_rate FROM win_rate_v3 ORDER BY id DESC LIMIT 1;";
         try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(querySQL)) {
