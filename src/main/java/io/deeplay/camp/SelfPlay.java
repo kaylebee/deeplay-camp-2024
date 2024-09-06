@@ -82,7 +82,7 @@ public class SelfPlay {
     }
 
     private Void playSingleGame(boolean firstBotStarts, DeepQLearningAgent agent) {
-        BotStrategy secondRandomBot = new ModelTesting(1, "ViolaBot", agent);
+        BotStrategy secondRandomBot = new Model(1, "ViolaBot", agent);
         BotStrategy firstRandomBot = new RandomBot(2, "DarlingBot");
         Board board = new Board();
         BoardService boardLogic = new BoardService(board);
